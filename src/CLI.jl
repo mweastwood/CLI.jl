@@ -15,5 +15,140 @@
 
 module CLI
 
+export Command, Option
+
+immutable Command
+    name::UTF8String
+    help::UTF8String
+end
+
+immutable Option
+    flag::UTF8String
+    help::UTF8String
+    T::Type
+    required::Bool
+    min_number::Number # The minimum number of arguments passed to this option
+    max_number::Number # The maximum number of arguments passed to this option
+end
+
+function Base.print(io::IO,command::Command)
+    print(io,"  ")
+    print(io,rpad(command.name,13," "))
+    print(io,replace(command.help,"\n","\n"*" "^15))
+end
+
+function Base.print(io::IO,option::Option)
+    print(io,"  ")
+    print(io,rpad(option.flag,13," "))
+    print(io,replace(option.help,"\n","\n"*" "^15))
+    option.required && print(io," (required)")
+end
+
+name = ""
+banner = ""
+commands = Command[]
+options = Dict{AbstractString,Vector{Option}}()
+
+set_name(str::AbstractString) = (global name; name = str)
+set_banner(str::AbstractString) = (global banner; banner = str)
+
+function print_banner()
+    println(banner)
+end
+
+function print_command_help()
+    print("""
+        usage: $name command options...
+
+        commands:
+        """)
+    for command in commands
+        println(command)
+    end
+    println("")
+end
+
+function print_option_help(command)
+    command_options = options[command]
+    println("$command options:")
+    for option in command_options
+        println(option)
+    end
+    println("")
+end
+
+function parse_option(opt::Option,args)
+    if length(args) > opt.max_number
+        error("Too many arguments passed to flag $(opt.flag) ($(opt.max_number) maximum).")
+    end
+    if length(args) < opt.min_number
+        error("Too few arguments passed to flag $(opt.flag) ($(opt.min_number) minimum).")
+    end
+    if opt.max_number > 1
+        return opt.T[parse_option(opt.T,arg) for arg in args]
+    end
+    parse_option(opt.T,args[1])
+end
+
+function parse_option(T::Type,arg)
+    try
+        return parse_option_helper(T,arg)
+    catch
+        error("Unable to convert $arg to type $T.")
+    end
+end
+
+parse_option_helper(::Type{UTF8String},arg) = utf8(arg)
+parse_option_helper(::Type{Int},arg) = int(arg)
+parse_option_helper(::Type{Float64},arg) = float64(arg)
+
+looks_like_flag(str) = startswith(str,"--")
+
+function parse_args(args)
+    command_names = [command.name for command in commands]
+    if length(args) < 1 || !(args[1] in command_names)
+        print_command_help()
+        error("Please provide one of the listed commands.")
+    end
+
+    command = args[1]
+    option_flags = [option.flag for option in options[command]]
+
+    if length(args) < 2
+        print_option_help(command)
+        error("Please select from the list options.")
+    end
+
+    args_dict = Dict{UTF8String,Any}()
+    idx = 2
+    while idx <= length(args)
+        if !(args[idx] in option_flags)
+            print_option_help(command)
+            error("\"$(args[idx])\" is not a recognized flag.")
+        end
+
+        option_flag = args[idx]
+        option = options[command][findfirst(option_flags,option_flag)]
+
+        next_idx = findnext(looks_like_flag,args,idx+1)
+        if next_idx == 0 # This is the last option
+            args_dict[option_flag] = parse_option(option,args[idx+1:end])
+            break
+        else
+            args_dict[option_flag] = parse_option(option,args[idx+1:next_idx-1])
+            idx = next_idx
+        end
+    end
+
+    # Verify that the required options are provided
+    for option in options[command]
+        if option.required && !(option.flag in keys(args_dict))
+            error("Required flag $(option.flag) is missing.")
+        end
+    end
+
+    command,args_dict
+end
+
 end
 
