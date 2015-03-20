@@ -84,6 +84,9 @@ function parse_option(opt::Option,args)
     if length(args) < opt.min_number
         error("Too few arguments passed to flag $(opt.flag) ($(opt.min_number) minimum).")
     end
+    if opt.max_number == 0
+        return nothing
+    end
     if opt.max_number > 1
         return opt.T[parse_option(opt.T,arg) for arg in args]
     end
