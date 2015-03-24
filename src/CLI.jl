@@ -102,8 +102,8 @@ function parse_option(T::Type,arg)
 end
 
 parse_option_helper(::Type{UTF8String},arg) = utf8(arg)
-parse_option_helper(::Type{Int},arg) = int(arg)
-parse_option_helper(::Type{Float64},arg) = float64(arg)
+parse_option_helper(::Type{Int},arg) = parse(Int,arg)
+parse_option_helper(::Type{Float64},arg) = parse(Float64,arg)
 
 looks_like_flag(str) = startswith(str,"--")
 
