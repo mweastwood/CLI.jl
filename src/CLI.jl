@@ -29,17 +29,23 @@ immutable Option
     required::Bool
     min_number::Number # The minimum number of arguments passed to this option
     max_number::Number # The maximum number of arguments passed to this option
+    conflicts::Vector{UTF8String} # A list of options that this one conflicts with
 end
+
+# Add a few default constructors
+Option(flag,help,required) = Option(flag,help,Nothing,required,0,0,UTF8String[])
+Option(flag,help,T,required) = Option(flag,help,T,required,1,1,UTF8String[])
+Option(flag,help,T,required,min_number,max_number) = Option(flag,help,T,required,min_number,max_number,UTF8String[])
 
 function Base.print(io::IO,command::Command)
     print(io,"  ")
-    print(io,rpad(command.name,13," "))
+    print(io,rpad(command.name,16," "))
     print(io,replace(command.help,"\n","\n"*" "^15))
 end
 
 function Base.print(io::IO,option::Option)
     print(io,"  ")
-    print(io,rpad(option.flag,13," "))
+    print(io,rpad(option.flag,16," "))
     print(io,replace(option.help,"\n","\n"*" "^15))
     option.required && print(io," (required)")
 end
@@ -147,6 +153,14 @@ function parse_args(args)
     for option in options[command]
         if option.required && !(option.flag in keys(args_dict))
             error("Required flag $(option.flag) is missing.")
+        end
+    end
+
+    # Verify that there are no conflicts
+    for option_flag in keys(args_dict)
+        option = options[command][findfirst(option_flags,option_flag)]
+        if !isempty(intersect(option.conflicts,keys(args_dict)))
+            error("There is a conflict with option $(option_flag).")
         end
     end
 
