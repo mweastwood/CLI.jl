@@ -27,15 +27,17 @@ immutable Option
     help::UTF8String
     T::Type
     required::Bool
-    min_number::Number # The minimum number of arguments passed to this option
-    max_number::Number # The maximum number of arguments passed to this option
+    min::Number # The minimum number of arguments passed to this option
+    max::Number # The maximum number of arguments passed to this option
     conflicts::Vector{UTF8String} # A list of options that this one conflicts with
 end
 
-# Add a few default constructors
-Option(flag,help,required) = Option(flag,help,Nothing,required,0,0,UTF8String[])
-Option(flag,help,T,required) = Option(flag,help,T,required,1,1,UTF8String[])
-Option(flag,help,T,required,min_number,max_number) = Option(flag,help,T,required,min_number,max_number,UTF8String[])
+Option(flag,help;
+       T=Nothing,
+       required=false,
+       min=0,
+       max=0,
+       conflicts=UTF8String[]) = Option(flag,help,T,required,min,max,conflicts)
 
 function Base.print(io::IO,command::Command)
     print(io,"  ")
@@ -84,16 +86,16 @@ function print_option_help(command)
 end
 
 function parse_option(opt::Option,args)
-    if length(args) > opt.max_number
-        error("Too many arguments passed to flag $(opt.flag) ($(opt.max_number) maximum).")
+    if length(args) > opt.max
+        error("Too many arguments passed to flag $(opt.flag) ($(opt.max) maximum).")
     end
-    if length(args) < opt.min_number
-        error("Too few arguments passed to flag $(opt.flag) ($(opt.min_number) minimum).")
+    if length(args) < opt.min
+        error("Too few arguments passed to flag $(opt.flag) ($(opt.min) minimum).")
     end
-    if opt.max_number == 0
+    if opt.max == 0
         return nothing
     end
-    if opt.max_number > 1
+    if opt.max > 1
         return opt.T[parse_option(opt.T,arg) for arg in args]
     end
     parse_option(opt.T,args[1])

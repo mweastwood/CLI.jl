@@ -15,27 +15,34 @@ push!(CLI.commands,Command("command2","Help text for command2."))
 CLI.options["command1"] = [
     Option("--foo","""
         A list of foos.""",
-        UTF8String,true,1,Inf),
+        T=UTF8String,
+        required=true,
+        min=1,
+        max=Inf),
     Option("--bar","""
         A list of bars.""",
-        Int,true,1,Inf),
+        T=Int,
+        required=true,
+        min=1,
+        max=Inf),
     Option("--flag","""
-        A flag.""",
-        false),
+        A flag."""),
     Option("--required-flag","""
         A required flag.""",
-        true),
+        required=true),
     Option("--float","""
         A float.""",
-        Float64,false)]
+        T=Float64,
+        min=1,
+        max=1)]
 
 CLI.options["command2"] = [
     Option("--flag-a","""
         Conflicts with --flag-b.""",
-        Nothing,false,0,0,["--flag-b"]),
+        conflicts=["--flag-b"]),
     Option("--flag-b","""
         Conflicts with --flag-a.""",
-        Nothing,false,0,0,["--flag-a"])]
+        conflicts=["--flag-a"])]
 
 parse_args(args) = CLI.parse_args(args)
 
