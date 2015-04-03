@@ -68,7 +68,3 @@ test_is_equal(args,parsed_args)
 args = ["command2","--flag-a","--flag-b"]
 @test_throws ErrorException TestProgram.parse_args(args)
 
-# Run from the command line
-# (just to confirm this doesn't error)
-run(`julia testprogram.jl command1 --foo foo1 foo2 --bar 1 2 3 4 --required-flag`)
-
