@@ -44,13 +44,13 @@ Option(flag,help;
 function Base.print(io::IO,command::Command)
     print(io,"  ")
     print(io,rpad(command.name,16," "))
-    print(io,replace(command.help,"\n","\n"*" "^15))
+    print(io,replace(command.help,"\n","\n"*" "^18))
 end
 
 function Base.print(io::IO,option::Option)
     print(io,"  ")
     print(io,rpad(option.flag,16," "))
-    print(io,replace(option.help,"\n","\n"*" "^15))
+    print(io,replace(option.help,"\n","\n"*" "^18))
     option.required && print(io," (required)")
 end
 
