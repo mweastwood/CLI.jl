@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
 
-import TestProgram
+include("TestProgram.jl")
 @show TestProgram.parse_args(ARGS)
 

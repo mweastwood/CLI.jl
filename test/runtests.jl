@@ -1,6 +1,6 @@
 using CLI
 using Base.Test
-import TestProgram
+include("TestProgram.jl")
 
 function test_is_equal(args,expected_result)
     expected_command,expected_args = expected_result
