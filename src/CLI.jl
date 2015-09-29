@@ -35,7 +35,7 @@ immutable Option
 end
 
 Option(flag,help;
-       T=Nothing,
+       T=Void,
        required=false,
        min=0,
        max=0,
